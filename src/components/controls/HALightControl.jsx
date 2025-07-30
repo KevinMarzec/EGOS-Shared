@@ -384,28 +384,25 @@ export const HALightControl = ({
                         <Palette className="h-4 w-4 text-gray-400" />
                         <span className="text-sm text-gray-300">Color</span>
                         <div 
-                            className="w-6 h-6 rounded border border-gray-500" 
+                            className={`w-10 h-10 rounded border-2 transition-all duration-200 ${
+                                isUpdating || !client || !device.state.power 
+                                    ? 'opacity-50 cursor-not-allowed border-gray-500' 
+                                    : 'cursor-pointer border-gray-400 hover:border-gray-300 hover:shadow-lg hover:scale-105'
+                            }`}
                             style={{ backgroundColor: currentColor }}
-                            title={`Current color: ${currentColor}`}
+                            title={`Current color: ${currentColor} - Click to edit`}
+                            onClick={isUpdating || !client || !device.state.power ? undefined : handleEditColor}
                         />
                     </div>
                     
                     {/* Color editing interface */}
-                    {isEditing ? (
+                    {isEditing && (
                         <InlineColorPicker 
                             value={tempColor}
                             onChange={setTempColor}
                             onSet={handleSetColor}
                             onCancel={handleCancelColor}
                         />
-                    ) : (
-                        <button
-                            onClick={handleEditColor}
-                            disabled={isUpdating || !client || !device.state.power}
-                            className="w-full px-3 py-2 text-sm bg-gray-700 text-gray-300 hover:bg-gray-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Edit Color
-                        </button>
                     )}
                 </div>
             )}
