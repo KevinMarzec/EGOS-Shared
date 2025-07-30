@@ -2,7 +2,21 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Lightbulb, Sun, Palette } from 'lucide-react';
 import ControlWrapper from "./ControlWrapper.jsx";
 
-// Color conversion utilities extracted from ColorPicker
+// Value normalization function - handles different input types
+const normalizeColorValue = (val) => {
+    if (typeof val === 'string' && val.trim()) {
+        // It's a hex string
+        return val.trim();
+    }
+    if (Array.isArray(val) && val.length === 3) {
+        // It's an RGB array, convert to hex
+        return rgbToHex(...val);
+    }
+    // Fallback to white
+    return '#ffffff';
+};
+
+// Color conversion utilities with proper type checking
 const rgbToHex = (r, g, b) => {
     return '#' + [r, g, b]
         .map(x => Math.max(0, Math.min(255, Math.round(x)))
@@ -12,11 +26,24 @@ const rgbToHex = (r, g, b) => {
 };
 
 const hexToRgb = (hex) => {
+    // Handle non-string inputs
+    if (typeof hex !== 'string') {
+        console.warn('hexToRgb: Expected string, got:', typeof hex, hex);
+        return [255, 255, 255]; // Default to white
+    }
+    
     hex = hex.replace(/^#/, '');
     if (hex.length === 3) {
         hex = hex.split('').map(char => char + char).join('');
     }
     const num = parseInt(hex, 16);
+    
+    // Validate the result
+    if (isNaN(num)) {
+        console.warn('hexToRgb: Invalid hex string:', hex);
+        return [255, 255, 255];
+    }
+    
     return [
         (num >> 16) & 255,
         (num >> 8) & 255,
@@ -59,17 +86,21 @@ const hsvToRgb = (h, s, v) => {
 
 // Inline Color Picker Component
 const InlineColorPicker = ({ value, onChange, onSet, onCancel }) => {
-    const [rgb, setRgb] = useState(() => hexToRgb(value));
-    const [hsv, setHsv] = useState(() => rgbToHsv(...hexToRgb(value)));
-    const [hexInput, setHexInput] = useState(value);
+    // Normalize the value first
+    const normalizedValue = normalizeColorValue(value);
+    
+    const [rgb, setRgb] = useState(() => hexToRgb(normalizedValue));
+    const [hsv, setHsv] = useState(() => rgbToHsv(...hexToRgb(normalizedValue)));
+    const [hexInput, setHexInput] = useState(normalizedValue);
     const saturationRef = useRef(null);
     const hueRef = useRef(null);
 
     useEffect(() => {
-        const newRgb = hexToRgb(value);
+        const newNormalized = normalizeColorValue(value);
+        const newRgb = hexToRgb(newNormalized);
         setRgb(newRgb);
         setHsv(rgbToHsv(...newRgb));
-        setHexInput(value);
+        setHexInput(newNormalized);
     }, [value]);
 
     const updateColor = useCallback((newHsv) => {
@@ -155,7 +186,7 @@ const InlineColorPicker = ({ value, onChange, onSet, onCancel }) => {
                 <div className="flex gap-1">
                     <div 
                         className="w-6 h-6 rounded border border-gray-500" 
-                        style={{ backgroundColor: value }}
+                        style={{ backgroundColor: normalizedValue }}
                         title="Original color"
                     />
                     <div 
@@ -258,7 +289,10 @@ export const HALightControl = ({
                                    client,
                                    publishMessage
                                }) => {
-    const [tempColor, setTempColor] = useState(device.state.color ?? '#ffffff');
+    // Normalize the device color value
+    const currentColor = normalizeColorValue(device.state.color);
+    
+    const [tempColor, setTempColor] = useState(currentColor);
     const [isEditing, setIsEditing] = useState(false);
     
     const topic = `${device.moduleId}/device/${device.id}/output/command`;
@@ -290,28 +324,21 @@ export const HALightControl = ({
     };
 
     const handleCancelColor = () => {
-        setTempColor(device.state.color ?? '#ffffff');
+        setTempColor(currentColor);
         setIsEditing(false);
     };
 
     const handleEditColor = () => {
-        setTempColor(device.state.color ?? '#ffffff');
+        setTempColor(currentColor);
         setIsEditing(true);
-    };
-
-    const handleEffectChange = async (effect) => {
-        await publishMessage(topic, {
-            command: 'setEffect',
-            parameters: { effect }
-        });
     };
 
     // Update temp color when device color changes externally
     useEffect(() => {
         if (!isEditing) {
-            setTempColor(device.state.color ?? '#ffffff');
+            setTempColor(currentColor);
         }
-    }, [device.state.color, isEditing]);
+    }, [currentColor, isEditing]);
 
     return (
         <ControlWrapper className="space-y-3">
@@ -365,8 +392,8 @@ export const HALightControl = ({
                         <span className="text-sm text-gray-300">Color</span>
                         <div 
                             className="w-6 h-6 rounded border border-gray-500" 
-                            style={{ backgroundColor: device.state.color }}
-                            title={`Current color: ${device.state.color}`}
+                            style={{ backgroundColor: currentColor }}
+                            title={`Current color: ${currentColor}`}
                         />
                     </div>
                     
@@ -389,29 +416,6 @@ export const HALightControl = ({
                     )}
                 </div>
             )}
-            {/* Effects Dropdown
-            {(device.state.effectList?.length > 0 || device.state.effects?.length > 0) && (
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-300">Effect</span>
-                    </div>
-                    <select
-                        value={device.state.effect || (device.state.effectList || device.state.effects)?.[0] || 'none'}
-                        onChange={(e) => handleEffectChange(e.target.value)}
-                        disabled={isUpdating || !client || !device.state.power}
-                        className="w-full bg-gray-700 text-white rounded-md text-sm px-3 py-2 border-0
-              focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                    >
-                        <option value="none">None</option>
-                        {(device.state.effectList || device.state.effects || []).map(effect => (
-                            <option key={effect} value={effect}>
-                                {effect.charAt(0).toUpperCase() + effect.slice(1).replace(/_/g, ' ')}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
-            */}
         </ControlWrapper>
     );
 };
