@@ -181,27 +181,20 @@ const InlineColorPicker = ({ value, onChange, onSet, onCancel }) => {
 
     return (
         <div className="space-y-3 p-3 bg-gray-800 rounded-lg border border-gray-600">
-            {/* Color preview comparison */}
-            <div className="flex items-center gap-2 mb-2">
-                <div className="flex gap-1">
-                    <div 
-                        className="w-6 h-6 rounded border border-gray-500" 
-                        style={{ backgroundColor: normalizedValue }}
-                        title="Original color"
-                    />
-                    <div 
-                        className="w-6 h-6 rounded border border-gray-500" 
-                        style={{ backgroundColor: hexInput }}
-                        title="New color"
-                    />
-                </div>
-                <span className="text-xs text-gray-400">Original → New</span>
+            {/* Current color preview */}
+            <div className="flex items-center gap-2 mb-3">
+                <div 
+                    className="w-8 h-8 rounded border border-gray-500" 
+                    style={{ backgroundColor: hexInput }}
+                    title={`Selected color: ${hexInput}`}
+                />
+                <span className="text-sm text-gray-300">Selected Color</span>
             </div>
 
-            {/* Saturation/Value selector - smaller for compact layout */}
+            {/* Saturation/Value selector - larger like original modal but compact */}
             <div
                 ref={saturationRef}
-                className="h-24 w-full rounded cursor-crosshair border border-gray-600 relative"
+                className="h-40 w-full rounded cursor-crosshair border border-gray-600 relative"
                 style={{
                     backgroundColor: `hsl(${hsv[0]}, 100%, 50%)`,
                     backgroundImage: 'linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent)'
@@ -209,7 +202,7 @@ const InlineColorPicker = ({ value, onChange, onSet, onCancel }) => {
                 onMouseDown={(e) => handleMouseDown(e, 'saturation')}
             >
                 <div
-                    className="absolute w-3 h-3 border-2 border-white rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none shadow-lg ring-1 ring-black/20"
+                    className="absolute w-4 h-4 border-2 border-white rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none shadow-lg ring-1 ring-black/20"
                     style={{
                         left: `${hsv[1] * 100}%`,
                         top: `${(1 - hsv[2]) * 100}%`,
@@ -218,17 +211,17 @@ const InlineColorPicker = ({ value, onChange, onSet, onCancel }) => {
                 />
             </div>
 
-            {/* Hue slider - thinner for compact layout */}
+            {/* Hue slider - slightly thicker to complement larger color selector */}
             <div
                 ref={hueRef}
-                className="h-3 w-full rounded cursor-pointer relative border border-gray-600"
+                className="h-4 w-full rounded cursor-pointer relative border border-gray-600"
                 style={{
                     background: 'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)'
                 }}
                 onMouseDown={(e) => handleMouseDown(e, 'hue')}
             >
                 <div
-                    className="absolute w-2 h-5 border-2 border-white rounded-full -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none shadow-lg ring-1 ring-black/20"
+                    className="absolute w-2 h-6 border-2 border-white rounded-full -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none shadow-lg ring-1 ring-black/20"
                     style={{
                         left: `${(hsv[0] / 360) * 100}%`,
                         backgroundColor: `hsl(${hsv[0]}, 100%, 50%)`
