@@ -322,8 +322,15 @@ export const HALightControl = ({
     };
 
     const handleEditColor = () => {
-        setTempColor(currentColor);
-        setIsEditing(true);
+        if (isEditing) {
+            // If already editing, close without saving (like cancel)
+            setTempColor(currentColor);
+            setIsEditing(false);
+        } else {
+            // If not editing, open the picker
+            setTempColor(currentColor);
+            setIsEditing(true);
+        }
     };
 
     // Update temp color when device color changes externally
@@ -334,78 +341,90 @@ export const HALightControl = ({
     }, [currentColor, isEditing]);
 
     return (
-        <ControlWrapper className="space-y-3">
-            {/* Power Toggle and Status */}
-            <div className="flex items-center gap-3">
-                <button
-                    onClick={handleToggle}
-                    disabled={isUpdating || !client}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-            ${device.state.power
-                        ? 'bg-yellow-500 hover:bg-yellow-600'
-                        : 'bg-gray-600 hover:bg-gray-500'}
-            ${isUpdating || !client ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-          <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-              ${device.state.power ? 'translate-x-6' : 'translate-x-1'}`}
-          />
-                </button>
-                <Lightbulb className={`h-4 w-4 ${device.state.power ? 'text-yellow-400' : 'text-gray-400'}`} />
-                <span className="text-sm text-gray-300">
-          {device.state.power ? 'On' : 'Off'}
-        </span>
-            </div>
-
-            {/* Brightness Control */}
-            {device.state.brightness !== undefined && (
-                <div className="flex items-center gap-3">
-                    <Sun className="h-4 w-4 text-gray-400" />
-                    <input
-                        type="range"
-                        min="0"
-                        max="255"
-                        value={device.state.brightness ?? 0}
-                        onChange={e => handleBrightnessChange(e.target.value)}
-                        disabled={isUpdating || !client || !device.state.power}
-                        className="flex-1 h-2 rounded-lg appearance-none cursor-pointer bg-gray-600
-              disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    <span className="text-sm text-gray-300 w-12 text-right">
-            {Math.floor((device.state.brightness ?? 0) * 100 / 255)}%
-          </span>
-                </div>
-            )}
-
-            {/* Color Control */}
-            {device.state.color !== undefined && (
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <Palette className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-300">Color</span>
-                        <div 
-                            className={`w-10 h-10 rounded border-2 transition-all duration-200 ${
-                                isUpdating || !client || !device.state.power 
-                                    ? 'opacity-50 cursor-not-allowed border-gray-500' 
-                                    : 'cursor-pointer border-gray-400 hover:border-gray-300 hover:shadow-lg hover:scale-105'
-                            }`}
-                            style={{ backgroundColor: currentColor }}
-                            title={`Current color: ${currentColor} - Click to edit`}
-                            onClick={isUpdating || !client || !device.state.power ? undefined : handleEditColor}
-                        />
+        <ControlWrapper className="bg-gray-800 rounded-lg border border-gray-600 p-4">
+            <div className="flex flex-col space-y-4">
+                {/* Row 1: Power Toggle and Status */}
+                <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                        <Lightbulb className={`h-5 w-5 ${device.state.power ? 'text-yellow-400' : 'text-gray-400'}`} />
+                        <span className="text-sm font-medium text-gray-300">
+                            {device.state.power ? 'On' : 'Off'}
+                        </span>
                     </div>
-                    
-                    {/* Color editing interface */}
-                    {isEditing && (
-                        <InlineColorPicker 
-                            value={tempColor}
-                            onChange={setTempColor}
-                            onSet={handleSetColor}
-                            onCancel={handleCancelColor}
+                    <button
+                        onClick={handleToggle}
+                        disabled={isUpdating || !client}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+                            ${device.state.power
+                                ? 'bg-yellow-500 hover:bg-yellow-600'
+                                : 'bg-gray-600 hover:bg-gray-500'}
+                            ${isUpdating || !client ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                        <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                                ${device.state.power ? 'translate-x-6' : 'translate-x-1'}`}
                         />
-                    )}
+                    </button>
                 </div>
-            )}
+
+                {/* Row 2: Brightness Control */}
+                {device.state.brightness !== undefined && (
+                    <div className="flex items-center gap-3 w-full">
+                        <Sun className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                        <input
+                            type="range"
+                            min="0"
+                            max="255"
+                            value={device.state.brightness ?? 0}
+                            onChange={e => handleBrightnessChange(e.target.value)}
+                            disabled={isUpdating || !client || !device.state.power}
+                            className="flex-1 h-2 rounded-lg appearance-none cursor-pointer bg-gray-600
+                                disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <span className="text-sm font-medium text-gray-300 w-12 text-right">
+                            {Math.floor((device.state.brightness ?? 0) * 100 / 255)}%
+                        </span>
+                    </div>
+                )}
+
+                {/* Row 3: Color Control */}
+                {device.state.color !== undefined && (
+                    <div className="w-full">
+                        <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-3">
+                                <Palette className="h-5 w-5 text-gray-400" />
+                                <span className="text-sm font-medium text-gray-300">Color</span>
+                            </div>
+                            <div 
+                                className={`w-10 h-10 rounded-lg border-2 transition-all duration-200 ${
+                                    isUpdating || !client || !device.state.power 
+                                        ? 'opacity-50 cursor-not-allowed border-gray-500' 
+                                        : 'cursor-pointer border-gray-400 hover:border-gray-300 hover:shadow-lg hover:scale-105 active:scale-95'
+                                } ${isEditing ? 'ring-2 ring-blue-500 ring-opacity-50 border-blue-400' : ''}`}
+                                style={{ backgroundColor: currentColor }}
+                                title={`Current color: ${currentColor} - Click to ${isEditing ? 'close' : 'edit'}`}
+                                onClick={isUpdating || !client || !device.state.power ? undefined : handleEditColor}
+                            />
+                        </div>
+                        
+                        {/* Color editing interface with animation */}
+                        <div className={`overflow-hidden transition-all duration-200 ease-out ${
+                            isEditing 
+                                ? 'max-h-96 opacity-100 transform translate-y-0' 
+                                : 'max-h-0 opacity-0 transform -translate-y-2'
+                        }`}>
+                            <div className="mt-3">
+                                <InlineColorPicker 
+                                    value={tempColor}
+                                    onChange={setTempColor}
+                                    onSet={handleSetColor}
+                                    onCancel={handleCancelColor}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </ControlWrapper>
     );
 };
