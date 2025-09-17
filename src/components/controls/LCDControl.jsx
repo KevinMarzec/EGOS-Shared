@@ -9,8 +9,8 @@ export const LCDControl = ({ device, isUpdating, client, publishMessage }) => {
 
     const topic = `${device.moduleId}/device/${device.id}/output/command`;
 
-    const NUM_COLS = 20; // TODO: Get from device configuration
-    const NUM_LINES = 4;
+    const NUM_COLS = device.configuration?.columns ?? 0;
+    const NUM_LINES = device.configuration?.rows ?? 0;
 
     const handleWrite = async () => {
         if (!client || isUpdating || !text) return;
