@@ -66,8 +66,8 @@ export const KeypadControl = ({ device, isUpdating, client, publishMessage }) =>
                 <span className="text-sm font-medium">Keypad</span>
             </div>
 
-            <div className={`grid grid-cols-${buttons[0].length} gap-2 max-w-[200px]`}>
-                {buttons.map((row, rowIndex) => (
+            <div className={`grid grid-cols-${buttons?.length ? buttons[0].length : 2} gap-2 max-w-[200px]`}>
+                {buttons?.map((row, rowIndex) => (
                     row.map((key, colIndex) => (
                         <button
                             key={`${rowIndex}-${colIndex}`}
