@@ -4,7 +4,7 @@ import { Keyboard } from 'lucide-react';
 
 const generateButtonMatrix = (rows, cols, keyMapping) => {
     // Split the keyMapping string into individual keys
-    const keys = keyMapping.split(',').map(key => key.trim());
+    const keys = keyMapping?.split(',')?.map(key => key.trim());
 
     // Create the matrix
     const buttons = [];
@@ -14,7 +14,7 @@ const generateButtonMatrix = (rows, cols, keyMapping) => {
         const currentRow = [];
         for (let col = 0; col < cols; col++) {
             // Add the key if available, otherwise use empty string or placeholder
-            if (keyIndex < keys.length) {
+            if (keyIndex < keys?.length) {
                 currentRow.push(keys[keyIndex]);
                 keyIndex++;
             } else {
